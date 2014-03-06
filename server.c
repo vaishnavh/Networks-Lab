@@ -39,13 +39,10 @@ int main(int argc, char *argv[]) {
   /* server infinite loop */
   while(1) {
     
-    /* init buffer */
-    // memset(msg,0x0,5);
 
 
     /* receive message */
     cliLen = sizeof(cliAddr);
-    //printf("Hello\n");
     n = recvfrom(sd, msg, 5, 0, 
 		 (struct sockaddr *) &cliAddr, &cliLen);
 
@@ -53,7 +50,15 @@ int main(int argc, char *argv[]) {
       printf("%s: cannot receive data \n",argv[0]);
       continue;
     }
-    printf("%s\n",msg);
+
+    scanf("%s",msg);
+    rc = sendto(sd, msg, strlen(msg)+1, 0, (struct sockaddr *) &cliAddr, cliLen);
+    if(rc < 0){
+	printf("Unable to send data\n");
+	close(sd);
+	exit(1);
+    }
+
   }/* end of server infinite loop */
 
 return 0;

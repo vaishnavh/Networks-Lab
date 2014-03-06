@@ -10,6 +10,19 @@
 #define SERVER_PORT 8000
 #define CLIENT_PORT 8500
 
+int recvfrom_with_timeout(int sockfd, char *buf, int msg_len, struct  sockaddr *src_addr, int* len){
+	fd_set socks;
+	struct timeval t;
+	FD_ZERO(&socks);
+	FD_SET(sockfd, &socks);
+	t.tv_sec = 100000;
+	if(select(sockfd + 1, &socks, NULL, NULL, &t) && \
+		       	recvfrom(sockfd, buf, msg_len, 0, src_addr, len)!=-1	)
+		return 1;
+	return 0;
+}
+
+
 int main(int argc, char *argv[]) {
 
 	//Sanity check code
@@ -25,7 +38,7 @@ int main(int argc, char *argv[]) {
 	}
 
 
-	int sd, rc, i;
+	int sd, rc, i, remoteServLen, n;
 	struct sockaddr_in cliAddr, remoteServAddr;
 	struct hostent *h;
 
@@ -59,9 +72,11 @@ int main(int argc, char *argv[]) {
 	  exit(1);
 	}
 
-	scanf("%s",command);
+	//Sends "open" first
 	while(strcmp(command,"done")){
 		//Keep asking for commands until done
+		
+		//Send command
 		rc = sendto(sd, command, strlen(command)+1, 0, (struct sockaddr *) &remoteServAddr, sizeof(remoteServAddr));
 		if(rc < 0){
 			printf("Unable to send data\n");
@@ -69,6 +84,9 @@ int main(int argc, char *argv[]) {
 			exit(1);
 		}
 
+		//Receive response
+		n = recvfrom_with_timeout(sd, command, 5, (struct sockaddr *) &remoteServAddr, &remoteServLen);
+		printf("Recvd: %s\n",command);
 		scanf("%s",command);
 	}
 
