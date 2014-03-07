@@ -5,21 +5,36 @@
 #include <stdio.h>
 #include <string.h> /* memset() */
 #include <stdlib.h>
-
+#include <unistd.h>
+#include <errno.h>
 
 #define SERVER_PORT 8000
 #define CLIENT_PORT 8500
+#define MAX_COMMAND_SIZE 500
+#define MAX_RESPONSE_SIZE 500
+#define MAX_BLOCK_SIZE 500
 
-int recvfrom_with_timeout(int sockfd, char *buf, int msg_len, struct  sockaddr *src_addr, int* len){
+int recvfrom_with_timeout(int sockfd, char *buf, struct  sockaddr *src_addr, int* len){
+	
 	fd_set socks;
 	struct timeval t;
 	FD_ZERO(&socks);
 	FD_SET(sockfd, &socks);
-	t.tv_sec = 100000;
-	if(select(sockfd + 1, &socks, NULL, NULL, &t) && \
-		       	recvfrom(sockfd, buf, msg_len, 0, src_addr, len)!=-1	)
-		return 1;
+	t.tv_usec = 1000000;
+	t.tv_sec = 0;
+	int bool_1 = select(sockfd + 1, &socks, NULL, NULL, &t);
+	if(bool_1){
+		int n =  recvfrom(sockfd, buf, MAX_BLOCK_SIZE, 0, src_addr, (socklen_t*)len);
+		if(n>=0){
+			return 1;
+		}else{
+			return -1;
+		}
+	}
+
 	return 0;
+
+	//return	recvfrom(sockfd, buf, msg_len, 0, src_addr, (socklen_t*)len);
 }
 
 
@@ -31,14 +46,12 @@ int main(int argc, char *argv[]) {
 		exit(0);
 	}
 
-	char command[5] = {"done"}; //Takes the command from the client side. 4 chars max.
-	while(strcmp(command,"open")!=0){
-		//Till the client enters "open" we don't proceed.
-		scanf("%s",command);
-	}
+	char command[MAX_COMMAND_SIZE] = {"done\0"};
+	char response[MAX_RESPONSE_SIZE]; 
 
 
-	int sd, rc, i, remoteServLen, n;
+
+	int sd, rc, remoteServLen, n;
 	struct sockaddr_in cliAddr, remoteServAddr;
 	struct hostent *h;
 
@@ -72,8 +85,19 @@ int main(int argc, char *argv[]) {
 	  exit(1);
 	}
 
+
+	while(strcmp(command,"open\n")!=0){
+		//Till the client enters "open" we don't proceed.
+		fgets(command, MAX_COMMAND_SIZE, stdin); //We don't use scanf as we have to
+		//accept spaces too.
+	}
+
+  /*----------------------------------------------------------------*/
+  /*----------------------------------------------------------------*/
+  /*----------------------------------------------------------------*/
+
 	//Sends "open" first
-	while(strcmp(command,"done")){
+	while(strcmp(command,"done\n")){
 		//Keep asking for commands until done
 		
 		//Send command
@@ -84,13 +108,51 @@ int main(int argc, char *argv[]) {
 			exit(1);
 		}
 
+
 		//Receive response
-		n = recvfrom_with_timeout(sd, command, 5, (struct sockaddr *) &remoteServAddr, &remoteServLen);
-		printf("Recvd: %s\n",command);
-		scanf("%s",command);
+		int count = 0;
+		n = recvfrom_with_timeout(sd, response, (struct sockaddr *) &remoteServAddr, &remoteServLen);
+	
+		if(command[0] == 'g' && command[1] == 'e' && command[2] == 't'){
+			if(n > 0){  
+			    int i;
+			    int k = strlen(command);
+			    for(i = 0; i <= k - 4; i++){
+				    command[i] = command[i+4];
+			    }
+			    command[k - 4] = '\0';
+			    FILE *fp;
+			    fp = fopen(command, "w");
+			    if(fp == NULL){
+				    printf("Unable to store file %s\n", command);				   
+			    } else{
+				    while(n > 0){
+					    fputs(response, fp);
+					    n = recvfrom_with_timeout(sd, response, (struct sockaddr *) &remoteServAddr, &remoteServLen);
+				    }
+				    fclose(fp);
+			    }
+			    fputs("Received file.\n",stdout);
+
+			}			
+			else{
+				printf("File not found\n");
+			}
+		}
+		else {  
+			while(n > 0){
+				fputs(response, stdout);
+				n = recvfrom_with_timeout(sd, response, (struct sockaddr *) &remoteServAddr, &remoteServLen);
+				count++;
+			}
+		}
+		fputs("=============================================\n", stdout);
+		fgets(command, MAX_COMMAND_SIZE, stdin);
+		fputs("---------------------------------------------\n", stdout);
 	}
 
-	  
+		fputs("=============================================\n", stdout);
+ 
 	  return 1;
 
 }
