@@ -12,36 +12,6 @@
 #define SERVER_PORT 8000
 #define CLIENT_PORT 8500
 
-int recvfrom_with_timeout(int sockfd, struct Message *buf, struct  sockaddr *src_addr, int* len){
-	
-	fd_set socks;
-	struct timeval t;
-	FD_ZERO(&socks);
-	FD_SET(sockfd, &socks);
-	t.tv_usec = 1000000;
-	t.tv_sec = 0;
-	int bool_1 = select(sockfd + 1, &socks, NULL, NULL, &t);
-	if(bool_1){
-		//int n =  recvfrom(sockfd, buf, MAX_BLOCK_SIZE, 0, src_addr, (socklen_t*)len);
-		struct Message message;
-		int n =  recvfrom(sockfd, (void*)&message, MAX_BLOCK_SIZE, 0, src_addr, (socklen_t*)len);
-		memcpy(buf, &message, sizeof(struct Message));
-		printf("%d\n",n);
- 		if(n>=0){
-			printf("%d\n",strlen((char*)buf));
-			//fputs(buf->content, stdout);
-			return 1;
-		}else{
-			return -1;
-		}
-	}
-
-	return 0;
-
-	//return	recvfrom(sockfd, buf, msg_len, 0, src_addr, (socklen_t*)len);
-}
-
-
 int main(int argc, char *argv[]) {
 
 	//Sanity check code
