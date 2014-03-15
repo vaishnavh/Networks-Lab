@@ -6,16 +6,20 @@
 #include <string.h> /* memset() */
 #include <stdlib.h>
 #include <unistd.h>
+#include "message.h"
 
 #define SERVER_PORT 8000
 #define CLIENT_PORT 8500
-#define MAX_COMMAND_SIZE 500
-#define MAX_BLOCK_SIZE 500
 
 
 
 int send_response(int sockfd, char* buf, struct sockaddr* dest_addr, int addrlen){
-	int rc = sendto(sockfd, buf, strlen(buf)+1, 0, dest_addr, addrlen);
+	struct Message message;
+	strcpy(message.content, buf);
+	//int rc = sendto(sockfd, buf, strlen(buf)+1, 0, dest_addr, addrlen);
+	int rc = sendto(sockfd, &message, sizeof(struct Message), 0, dest_addr, addrlen);
+	fputs(message.content, stdout);
+	printf("%d\n",sizeof(struct Message));
 	  if(rc < 0){
 		printf("Unable to send data\n");
 		close(sockfd);
@@ -114,9 +118,9 @@ int main(int argc, char *argv[]) {
 			    //A simple cd.
 			    if(chdir("/")==-1){
 				    printf("Cannot move to home directory.\n");
-				    exit(1);
+			    }else{
+				    printf("Moved to home directory\n");
 			    }
-			    printf("Moved to home directory\n");
 		    }
 		    else{
 			    int i;
@@ -127,8 +131,9 @@ int main(int argc, char *argv[]) {
 			    msg[k - 3] = '\0';
 			    if(chdir(msg)==-1){
 				printf("Cannot move to specified location.\n");
+			    }else{
+			        printf("Moved to \"%s\"\n",msg);
 			    }
-			    printf("Moved to \"%s\"\n",msg);
 		    }
 	    }else if(msg[0] == 'p' && msg[1] == 'w' && msg[2] == 'd'){
 		    execute_command("pwd", sd, (struct sockaddr*) &cliAddr, cliLen);

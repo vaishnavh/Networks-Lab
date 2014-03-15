@@ -12,7 +12,7 @@
 #define SERVER_PORT 8000
 #define CLIENT_PORT 8500
 
-int recvfrom_with_timeout(int sockfd, struct Message *buf, struct  sockaddr *src_addr, int* len){
+int recvfrom_with_timeout(int sockfd, char *buf, struct  sockaddr *src_addr, int* len){
 	
 	fd_set socks;
 	struct timeval t;
@@ -22,14 +22,10 @@ int recvfrom_with_timeout(int sockfd, struct Message *buf, struct  sockaddr *src
 	t.tv_sec = 0;
 	int bool_1 = select(sockfd + 1, &socks, NULL, NULL, &t);
 	if(bool_1){
-		//int n =  recvfrom(sockfd, buf, MAX_BLOCK_SIZE, 0, src_addr, (socklen_t*)len);
 		struct Message message;
 		int n =  recvfrom(sockfd, (void*)&message, MAX_BLOCK_SIZE, 0, src_addr, (socklen_t*)len);
-		memcpy(buf, &message, sizeof(struct Message));
-		printf("%d\n",n);
- 		if(n>=0){
-			printf("%d\n",strlen((char*)buf));
-			//fputs(buf->content, stdout);
+		strcpy(buf, message.content);
+		if(n>=0){
 			return 1;
 		}else{
 			return -1;
@@ -51,8 +47,8 @@ int main(int argc, char *argv[]) {
 	}
 
 	char command[MAX_COMMAND_SIZE] = {"done\0"};
-	//char response[MAX_RESPONSE_SIZE]; 
-	struct Message response;
+	char response[MAX_RESPONSE_SIZE]; 
+
 
 
 	int sd, rc, remoteServLen, n;
@@ -115,7 +111,7 @@ int main(int argc, char *argv[]) {
 
 		//Receive response
 		int count = 0;
-		n = recvfrom_with_timeout(sd, &response, (struct sockaddr *) &remoteServAddr, &remoteServLen);
+		n = recvfrom_with_timeout(sd, response, (struct sockaddr *) &remoteServAddr, &remoteServLen);
 	
 		if(command[0] == 'g' && command[1] == 'e' && command[2] == 't'){
 			if(n > 0){  
@@ -131,8 +127,8 @@ int main(int argc, char *argv[]) {
 				    printf("Unable to store file %s\n", command);				   
 			    } else{
 				    while(n > 0){
-					    fputs(response.content,fp);
-					    n = recvfrom_with_timeout(sd, &response, (struct sockaddr *) &remoteServAddr, &remoteServLen);
+					    fputs(response, fp);
+					    n = recvfrom_with_timeout(sd, response, (struct sockaddr *) &remoteServAddr, &remoteServLen);
 				    }
 				    fclose(fp);
 			    }
@@ -145,8 +141,8 @@ int main(int argc, char *argv[]) {
 		}
 		else {  
 			while(n > 0){
-			        fputs(response.content, stdout);
-				n = recvfrom_with_timeout(sd, &response, (struct sockaddr *) &remoteServAddr, &remoteServLen);
+				fputs(response, stdout);
+				n = recvfrom_with_timeout(sd, response, (struct sockaddr *) &remoteServAddr, &remoteServLen);
 				count++;
 			}
 		}
