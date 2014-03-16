@@ -1,18 +1,19 @@
 CC = gcc
 CFLAGS = -g -Wall
 
+all: client server
 
-client: my_client.o swp.o
-	$(CC) $(FLAGS) -o client my_client.o swp.o
+client: swp.o client.o swp.h
+	$(CC) $(CFLAGS) -o client client.o swp.o
 
-server: my_server.o swp.o
-	$(CC) $(FLAGS) -o server my_server.o swp.o
+server: swp.o server.o swp.h
+	$(CC) $(CFLAGS) -o server server.o swp.o
 
 my_client: client.c swp.h
-	$(CC) $(CFLAGS) -c client.c -o my_client
+	$(CC) $(CFLAGS) -c client.c -o client
 
 my_server: server.c swp.h
-	$(CC) $(CFLAGS) -c server.c -o my_server
+	$(CC) $(CFLAGS) -c server.c -o server
 
 swp: swp.c swp.h
 	$(CC) $(CFLAGS) -c swp.c -o swp

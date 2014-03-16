@@ -14,7 +14,6 @@
 
 int execute_command(struct SWP* swp, char* command, int sockfd, struct sockaddr* dest_addr, int addrlen){
 	FILE *fp;
-	char output[MAX_BLOCK_SIZE];
 	fp = popen(command,"r");
 	if(fp == NULL){
 		printf("Something wrong with \"%s\"\n",command);
@@ -31,7 +30,7 @@ int execute_command(struct SWP* swp, char* command, int sockfd, struct sockaddr*
 int main(int argc, char *argv[]) {
 
   char msg[MAX_COMMAND_SIZE]; 
-  int sd, rc, n, cliLen;
+  int sd, rc, cliLen;
   struct sockaddr_in cliAddr, servAddr;
 
   //Sanity check code
@@ -68,14 +67,14 @@ int main(int argc, char *argv[]) {
   int started = 0;
 
   cliLen = sizeof(cliAddr);
-  struct SWP* swp = get_new_SWP(argc[1], &cliAddr, cliLen, sd);
+  struct SWP* swp = get_new_SWP(atoi(argv[1]), (struct sockaddr*)&cliAddr, cliLen, sd);
   /* server infinite loop */
   while(1) {
 	    
 	    	
 	    /* receive message */
-	    msg = receive_command(swp);
-
+	    while(receive_command(swp, msg) == -1);
+	    fputs(msg, stdout);
 	    if(msg[strlen(msg)-1]=='\n'){
 		    msg[strlen(msg)-1]='\0';
 	    }
@@ -98,7 +97,7 @@ int main(int argc, char *argv[]) {
 	    
 	    //ls command
 	    else if(msg[0] == 'l' && msg[1] == 's'){
-		    execute_command(msg, sd, (struct sockaddr*) &cliAddr, cliLen);
+		    execute_command(swp, msg, sd, (struct sockaddr*) &cliAddr, cliLen);
 	    }else if(msg[0] == 'c' && msg[1] == 'd'){
 		    if(msg[2] == '\0'){
 			    //A simple cd.
@@ -122,7 +121,7 @@ int main(int argc, char *argv[]) {
 			    }
 		    }
 	    }else if(msg[0] == 'p' && msg[1] == 'w' && msg[2] == 'd'){
-		    execute_command("pwd", sd, (struct sockaddr*) &cliAddr, cliLen);
+		    execute_command(swp, "pwd", sd, (struct sockaddr*) &cliAddr, cliLen);
 	    }else if(msg[0] == 'g' && msg[1] == 'e' && msg[2] == 't'){
 		    int i;
 		    int k = strlen(msg);

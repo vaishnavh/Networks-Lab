@@ -1,0 +1,63 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+CLIENT_PORT	client.c	13;"	d	file:
+CLIENT_PORT	server.c	12;"	d	file:
+CONTENT_SIZE	message.h	7;"	d
+CONTENT_SIZE	swp.h	8;"	d
+DISCONNECT_TIME	swp.h	9;"	d
+LAF	swp.h	/^	unsigned int LAF; \/\/ largest acceptable frame$/;"	m	struct:ReceiverSW
+LAR	swp.h	/^	unsigned int LAR; \/\/ Last ack received$/;"	m	struct:SenderSW
+LFR	swp.h	/^	unsigned int LFR; \/\/ Last frame received$/;"	m	struct:ReceiverSW
+LFS	swp.h	/^	unsigned int LFS; \/\/ Last frame sent$/;"	m	struct:SenderSW
+MAX_BLOCK_SIZE	message.h	6;"	d
+MAX_BLOCK_SIZE	swp.h	6;"	d
+MAX_COMMAND_SIZE	message.h	4;"	d
+MAX_COMMAND_SIZE	swp.h	7;"	d
+MAX_RESPONSE_SIZE	message.h	5;"	d
+MAX_SEQ_NO	swp.h	11;"	d
+MESSAGE_H_	message.h	2;"	d
+MOD	swp.h	12;"	d
+Message	message.h	/^struct Message{$/;"	s
+Message	swp.h	/^struct Message{$/;"	s
+RWS	swp.h	/^	unsigned int RWS; \/\/ window size$/;"	m	struct:ReceiverSW
+ReceiverSW	swp.h	/^struct ReceiverSW{$/;"	s
+SERVER_PORT	client.c	12;"	d	file:
+SERVER_PORT	server.c	11;"	d	file:
+SWP	swp.h	/^struct SWP{$/;"	s
+SWP_H_	swp.h	2;"	d
+SWS	swp.h	/^	unsigned int SWS; \/\/ sender window size$/;"	m	struct:SenderSW
+SenderSW	swp.h	/^struct SenderSW{$/;"	s
+TIMEOUT	swp.h	10;"	d
+ack	swp.h	/^	int ack; \/\/ set as -1 if it is not an ack. otherwise set.$/;"	m	struct:Message
+add_message_to_sender	swp.c	/^int add_message_to_sender(struct SenderSW* sender, char* buf, int ack){$/;"	f
+addr	swp.h	/^	struct sockaddr* addr;$/;"	m	struct:SWP	typeref:struct:SWP::sockaddr
+addrlen	swp.h	/^	socklen_t addrlen;$/;"	m	struct:SWP
+content	message.h	/^	char content[CONTENT_SIZE];$/;"	m	struct:Message
+content	swp.h	/^	char content[CONTENT_SIZE];$/;"	m	struct:Message
+deliver_message	swp.c	/^int deliver_message(struct SWP* swp, struct Message* message){$/;"	f
+execute_command	server.c	/^int execute_command(struct SWP* swp, char* command, int sockfd, struct sockaddr* dest_addr, int addrlen){$/;"	f
+get_new_SWP	swp.c	/^struct SWP * get_new_SWP(unsigned int window_size, struct sockaddr* addr, int addrlen, int sockfd){$/;"	f
+is_sender_empty	swp.c	/^int is_sender_empty(struct SWP* swp){$/;"	f
+is_sender_window_moved	swp.c	/^int is_sender_window_moved(struct SWP* swp){$/;"	f
+is_valid_ack	swp.c	/^int is_valid_ack(struct SenderSW* sender, int ack_no){$/;"	f
+is_valid_frame	swp.c	/^int is_valid_frame(struct ReceiverSW* receiver, int seq_no){$/;"	f
+main	client.c	/^int main(int argc, char *argv[]) {$/;"	f
+main	server.c	/^int main(int argc, char *argv[]) {$/;"	f
+print_message	swp.c	/^void print_message(struct Message* message){$/;"	f
+receive	swp.c	/^int receive(struct SWP* swp){$/;"	f
+receive_command	swp.c	/^char* receive_command(struct SWP* swp){$/;"	f
+receive_message	swp.c	/^int receive_message(struct SWP* swp, FILE *fp){$/;"	f
+receive_with_timeout	swp.c	/^int receive_with_timeout(struct SWP* swp, struct Message* buf){$/;"	f
+receiver	swp.h	/^	struct ReceiverSW* receiver;$/;"	m	struct:SWP	typeref:struct:SWP::ReceiverSW
+send_and_receive	swp.c	/^int send_and_receive(struct SWP* swp){$/;"	f
+send_command	swp.c	/^int send_command(struct SWP* swp, char* command){$/;"	f
+send_messages	swp.c	/^int send_messages(struct SWP* swp, FILE* fp){$/;"	f
+sender	swp.h	/^	struct SenderSW* sender;$/;"	m	struct:SWP	typeref:struct:SWP::SenderSW
+seq_no	swp.h	/^	unsigned int seq_no; \/\/ sequence number$/;"	m	struct:Message
+sockfd	swp.h	/^	int sockfd;$/;"	m	struct:SWP
+window	swp.h	/^	struct Message** window;$/;"	m	struct:ReceiverSW	typeref:struct:ReceiverSW::Message
+window	swp.h	/^	struct Message** window;$/;"	m	struct:SenderSW	typeref:struct:SenderSW::Message

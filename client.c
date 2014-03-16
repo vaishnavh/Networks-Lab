@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
 	char command[MAX_COMMAND_SIZE] = {"done\0"};
 
 
-	int sd, rc,  n;
+	int sd, rc;
 	struct sockaddr_in cliAddr, remoteServAddr;
 	struct hostent *h;
 
@@ -73,10 +73,9 @@ int main(int argc, char *argv[]) {
 		//Keep asking for commands until done
 		
 		//Send command
-		if(send_command(swp, command) < 0){
-			printf("Unable to send data\n");
-			close(sd);
-			exit(1);
+		if(send_command(swp, command) == -1){
+			printf("Server not responding\n");
+			exit(0);
 		}
 
 
