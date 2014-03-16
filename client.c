@@ -58,9 +58,12 @@ int main(int argc, char *argv[]) {
 	}
 
 	struct SWP* swp = get_new_SWP(atoi(argv[2]), (struct sockaddr*)&remoteServAddr, sizeof(remoteServAddr), sd);
+
 	while(strcmp(command,"open\n")!=0){
+		fputs("\n >> ", stdout);
 		//Till the client enters "open" we don't proceed.
 		fgets(command, MAX_COMMAND_SIZE, stdin); //We don't use scanf as we have to
+		fputs("----------------------------------------\n", stdout);
 		//accept spaces too.
 	}
 
@@ -94,14 +97,13 @@ int main(int argc, char *argv[]) {
 
 				receive_message(swp, fp);
 				fclose(fp);
-			        printf("%d %s \n", strlen(new_name), new_name);
 			    }
 
 		}
 		else {  
 			receive_message(swp, stdout);
 		}
-		fputs("=============================================\n", stdout);
+		fputs("=============================================\n >> ", stdout);
 		fgets(command, MAX_COMMAND_SIZE, stdin);
 		fputs("---------------------------------------------\n", stdout);
 	}

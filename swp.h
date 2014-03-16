@@ -7,15 +7,16 @@
 #define CONTENT_SIZE 16000
 #define MAX_COMMAND_SIZE 32000
 #define DISCONNECT_TIME 1 // 1 second
-#define TIMEOUT_USEC 0
-#define TIMEOUT_SEC 1
+#define TIMEOUT_USEC 550000
+#define TIMEOUT_SEC 0
 #define MAX_SEQ_NO 4294967295
-#define MOD(x) ((x) % MAX_SEQ_NO)
+#define _DEBUG 1
+#define MOD(x) (x)
+
 //TODO: check with greater window size
 //TODO: fix timeouts
+//TODO: get wrapup?
 //TODO: Disconnection code
-//TODO: binary file with smaller packet size?
-//TODO: differentiate between file output and stdout
 struct Message{
 	unsigned int seq_no; // sequence number
 	int ack; // set as -1 if it is not an ack. otherwise set.
