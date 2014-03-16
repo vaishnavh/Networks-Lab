@@ -8,10 +8,10 @@
 #include <errno.h>
 
 void print_message(struct Message* message){
-	printf("Message Sequence Number : %d \n",message->seq_no);
+	printf("Message Sequence Number:%d \n",message->seq_no);
 	if(message->ack == -1){
 		fputs(message->content, stdout);
-		printf("\n\n");
+		printf("\nMessage size = %d\n",message->size);
 	}else{
 		printf("Ack : %d\n",message->ack);
 	}
@@ -47,7 +47,7 @@ int add_message_to_sender(struct SenderSW* sender, char* buf, int ack, int size)
 	//Assumes that the buffer has an extra position
 	struct Message* message = (struct Message*) malloc(sizeof(struct Message));
 	if (buf != NULL)
-		strcpy(message->content, buf);
+		memcpy(message->content, buf, CONTENT_SIZE);
 	int pos;
 	for(pos = sender->SWS - 1; pos >= 0; pos--){
 		if(sender->window[pos] != NULL){
@@ -109,12 +109,12 @@ int is_sender_empty(struct SWP* swp){
 
 
 int deliver_message(struct SWP* swp, struct Message* message){
-	printf("%d\n",sizeof(struct Message));
 	int rc = sendto(swp->sockfd, message, sizeof(struct Message), 0, swp->addr, swp->addrlen);
 	fputs("Sending this message: \n",stdout);
 	print_message(message);
+	printf("%d\n",sizeof(*message));
 	if(rc < 0){
-		printf("Error sending data\n");
+		printf("Error sending  data\n");
 		perror(strerror(errno));
 		close(swp->sockfd);
 		exit(1);
@@ -253,16 +253,17 @@ int send_command(struct SWP* swp, char* command){
 	char buf[CONTENT_SIZE];
 	int i = 0;
 	int ret_val = 1;
+	int count = 1;
 	while(ret_val == 1){
 		//Populating window stage
 		while(is_sender_window_moved(swp) && (i <= strlen(command))){
 			if(i + CONTENT_SIZE > strlen(command)){
-				memcpy(buf, command + i, sizeof(char) * (strlen(command) - i + 1));
-				add_message_to_sender(swp->sender, buf, -1, CONTENT_SIZE);
+				memmove(buf, command + i, sizeof(char) * (strlen(command) - i + 1));
+				add_message_to_sender(swp->sender, buf, -1, strlen(command) - i + 1);
 				i = strlen(command) + 1;
 				break;
 			}else{
-				memcpy(buf, command + i, sizeof(char) * CONTENT_SIZE);
+				memmove(buf, command + i, sizeof(char) * CONTENT_SIZE);
 				add_message_to_sender(swp->sender, buf, -1, CONTENT_SIZE);
 				i += CONTENT_SIZE;
 			}
@@ -332,7 +333,7 @@ int receive(struct SWP* swp){
 }
 
 
-int receive_command(struct SWP* swp, char* command){
+int receive_command(struct SWP* swp, char command[MAX_COMMAND_SIZE]){
 	// This SWP side is receiving a command. 
 	// And sending an ack.
 	struct ReceiverSW *receiver = swp->receiver;
@@ -349,7 +350,7 @@ int receive_command(struct SWP* swp, char* command){
 		// Now send acks and write things down
 		int pos;
 		for(pos = 0; pos < receiver->RWS && receiver->window[pos] != NULL; pos++){
-			printf("pos: %d at receiver is NOT NULL\n",pos);
+			printf("pos:  %d at receiver is NOT NULL\n",pos);
 		}
 		// pos is now at the index which has not been sent
 		receiver->LFR = MOD(receiver->LFR + pos); 
@@ -364,8 +365,9 @@ int receive_command(struct SWP* swp, char* command){
 		printf("pos= %d\n",pos);
 		for(ind = 0; ind < receiver->RWS; ind ++){
 			if(ind < pos){
-				printf("command = %s\n",receiver->window[ind]->content);
-				memcpy(command + com_ind, receiver->window[ind]->content, sizeof(char) * CONTENT_SIZE);
+				printf("command = %s,  command_size = %d, copy this = %s, com_ind = %d\n",command, strlen(command),receiver->window[ind]->content, com_ind);
+				
+				memmove(command + com_ind, receiver->window[ind]->content, sizeof(char) * CONTENT_SIZE);
 			printf("hi...\n");
 				com_ind += CONTENT_SIZE;
 				
@@ -421,9 +423,7 @@ int receive_message(struct SWP* swp, FILE *fp){
 		printf("OUTPUT STREAM ---------- till %d\n",pos);
 		for(ind = 0; ind < receiver->RWS; ind ++){
 			if(ind < pos){
-				fwrite(receiver->window[ind]->content, sizeof(char), receiver->window[ind]->size, fp);
-				
-				
+					fwrite(receiver->window[ind]->content, sizeof(char), receiver->window[ind]->size, fp);
 			}
 			if(ind + pos < receiver->RWS){
 					receiver->window[ind] = receiver->window[pos];

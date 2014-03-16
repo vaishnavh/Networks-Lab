@@ -1,0 +1,64 @@
+# ff = input file
+# fo = output file
+ff = File.open(ARGV[0], "r")
+fo = File.open(ARGV[1], "w")
+
+# Finds your name by taking the line after the Add Question line
+while (ff.gets != "Add Question\n")
+end
+ff.gets
+name = ff.gets.chomp
+
+# Finds the starting line for each answer by detecting your tagline and subtracting 2
+lines = []
+last_comment_line = 0
+while (line = ff.gets)
+	lines << ff.lineno - 2 if line =~ /^#{name},/
+	# Detects the end of answers by the last time "Comment" appears on a line
+	last_comment_line  = ff.lineno if line =~ /Comment/
+end
+# Caps the end of the questions
+lines << last_comment_line
+
+# We now parse the file, knowing where the answers lie
+ff.rewind
+
+#for calculating h-index
+votes = []
+
+#Go to the first answer
+start = lines.shift
+ff.gets until ff.lineno == start - 1
+
+# OPTIONAL: Uncomment if you want a header row to your table
+fo.puts("Upvotes\tTitle\tText\tLength")
+
+# While there's still answers to be processed...
+while (cur_line = lines.shift)
+	title = ff.gets.chomp
+	ff.gets
+	tagline = ff.gets.chomp
+	answer = ff.gets.chomp
+	if (answer =~ /\d+ votes? by /)
+	  vote = answer.match(/\d+/)[0].to_i + 1
+	  answer = ""
+	else
+	  vote = 1
+	end
+	#p answer
+	while (ff.lineno < cur_line - 2)
+		answer << ff.gets.chomp + " "
+	end
+	votes << vote
+	answer.gsub!(/\t/, " ") # Replace all tabs with spaces so we can tab delimit the file
+	comments = ff.gets.chomp
+	
+	# Writes the results to a file
+	fo.puts(vote.to_s + "\t" + title + "\t" + answer + "\t" + answer.length.to_s)
+end
+
+#Calculates h-index
+votes.sort!.reverse!
+i = 0
+i += 1 while (i < votes[i])
+puts name + "'s h-index is " + i.to_s

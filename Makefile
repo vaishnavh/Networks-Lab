@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -g -Wall
 
-all: client server
+all: swp client server
 
 client: swp.o client.o swp.h
 	$(CC) $(CFLAGS) -o client client.o swp.o

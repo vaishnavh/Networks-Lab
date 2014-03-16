@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
 		exit(0);
 	}
 
-	char command[MAX_COMMAND_SIZE] = {"done\0"};
+	char command[MAX_COMMAND_SIZE]	= {"done\0"};
 
 
 	int sd, rc;
@@ -82,20 +82,19 @@ int main(int argc, char *argv[]) {
 		//Receive response
 	
 		if(command[0] == 'g' && command[1] == 'e' && command[2] == 't'){
-			    int i;
 			    int k = strlen(command);
-			    for(i = 0; i <= k - 4; i++){
-				    command[i] = command[i+4];
-			    }
-			    command[k - 4] = '\0';
+		       	    char new_name[k - 3];
+			    memcpy(new_name, command + 4, k - 4);
+			    new_name[k - 5] = '\0';
 			    FILE *fp;
-			    fp = fopen(command, "wb");
+			    fp = fopen(new_name, "wb");
 			    if(fp == NULL){
 				    printf("Unable to store file %s\n", command);				   
 			    } else{
 
 				receive_message(swp, fp);
 				fclose(fp);
+			        printf("%d %s \n", strlen(new_name), new_name);
 			    }
 
 		}

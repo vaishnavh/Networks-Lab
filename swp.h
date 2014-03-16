@@ -4,19 +4,18 @@
 #include <sys/socket.h>
 #include <stdio.h>
 #define MAX_BLOCK_SIZE 10000
-#define MAX_COMMAND_SIZE 10000
-#define CONTENT_SIZE 5000
+#define CONTENT_SIZE 16000
+#define MAX_COMMAND_SIZE 32000
 #define DISCONNECT_TIME 1 // 1 second
 #define TIMEOUT_USEC 0
 #define TIMEOUT_SEC 1
 #define MAX_SEQ_NO 4294967295
 #define MOD(x) ((x) % MAX_SEQ_NO)
-//TODO: Take care of duplicate ACKS!
-//TODO: Take care of timeouts?
-//TODO: Update LAF etc., including ACKS?
-//TODO: Add interface
+//TODO: check with greater window size
+//TODO: fix timeouts
 //TODO: Disconnection code
-//TODO: Take care of -1, -1 in receiver LAR 
+//TODO: binary file with smaller packet size?
+//TODO: differentiate between file output and stdout
 struct Message{
 	unsigned int seq_no; // sequence number
 	int ack; // set as -1 if it is not an ack. otherwise set.
