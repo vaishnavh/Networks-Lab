@@ -6,29 +6,13 @@
 #include <string.h> /* memset() */
 #include <stdlib.h>
 #include <unistd.h>
-#include "message.h"
+#include "swp.h"
 
 #define SERVER_PORT 8000
 #define CLIENT_PORT 8500
 
 
-
-int send_response(int sockfd, char* buf, struct sockaddr* dest_addr, int addrlen){
-	struct Message message;
-	strcpy(message.content, buf);
-	//int rc = sendto(sockfd, buf, strlen(buf)+1, 0, dest_addr, addrlen);
-	int rc = sendto(sockfd, &message, sizeof(struct Message), 0, dest_addr, addrlen);
-	fputs(message.content, stdout);
-	printf("%d\n",sizeof(struct Message));
-	  if(rc < 0){
-		printf("Unable to send data\n");
-		close(sockfd);
-		exit(1);
-	    }
-	return 0;
-}
-
-int execute_command(char* command, int sockfd, struct sockaddr* dest_addr, int addrlen){
+int execute_command(struct SWP* swp, char* command, int sockfd, struct sockaddr* dest_addr, int addrlen){
 	FILE *fp;
 	char output[MAX_BLOCK_SIZE];
 	fp = popen(command,"r");
@@ -36,9 +20,8 @@ int execute_command(char* command, int sockfd, struct sockaddr* dest_addr, int a
 		printf("Something wrong with \"%s\"\n",command);
 		exit(1);
 	}
-	while(fgets(output, sizeof(output) - 1, fp) != NULL){
-		 send_response(sockfd, output, dest_addr, addrlen);
-	}
+	send_messages(swp, fp);
+	pclose(fp);
 	return 0;
 }
 	
@@ -50,6 +33,13 @@ int main(int argc, char *argv[]) {
   char msg[MAX_COMMAND_SIZE]; 
   int sd, rc, n, cliLen;
   struct sockaddr_in cliAddr, servAddr;
+
+  //Sanity check code
+  if(argc<2){
+	printf("usage: %s <window_size>\n",argv[0]);
+	exit(0);
+  }
+
 
   /* socket creation */
   sd=socket(AF_INET, SOCK_DGRAM, 0);
@@ -76,19 +66,15 @@ int main(int argc, char *argv[]) {
   /*----------------------------------------------------------------*/
 
   int started = 0;
+
+  cliLen = sizeof(cliAddr);
+  struct SWP* swp = get_new_SWP(argc[1], &cliAddr, cliLen, sd);
   /* server infinite loop */
   while(1) {
 	    
-		
+	    	
 	    /* receive message */
-	    cliLen = sizeof(cliAddr);
-	    n = recvfrom(sd, msg, MAX_BLOCK_SIZE, 0, 
-			 (struct sockaddr *) &cliAddr,(socklen_t*) &cliLen);
-
-	    if(n<0) {
-	      printf("%s: cannot receive data \n",argv[0]);
-	      continue;
-	    }
+	    msg = receive_command(swp);
 
 	    if(msg[strlen(msg)-1]=='\n'){
 		    msg[strlen(msg)-1]='\0';
@@ -102,7 +88,7 @@ int main(int argc, char *argv[]) {
 				    exit(1);
 			    }else{
 				    printf("Moved to home directory.\n");
-				    send_response(sd, "HOME\n", (struct sockaddr *) &cliAddr, cliLen);
+				    send_command(swp, "HOME\n");
 				    started = 1;
 			    }
 		    }else{
@@ -146,14 +132,11 @@ int main(int argc, char *argv[]) {
 		    msg[k - 4] = '\0';
 		    FILE *fp;
 		    printf("Sending %s\n",msg);
-		    fp = fopen(msg, "r");
+		    fp = fopen(msg, "rb");
 		    if(fp == NULL){
 			    printf("Unable to open file %s\n", msg);				   
 		    } else{
-			    char output[MAX_BLOCK_SIZE];
-			    while(fgets(output, sizeof(output) - 1, fp) != NULL){
-		 	        send_response(sd, output, (struct sockaddr *) &cliAddr, cliLen);
-		            }
+			    send_messages(swp, fp);
 			    fclose(fp);
 		    }
            }

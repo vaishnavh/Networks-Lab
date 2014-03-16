@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
-#include "message.h"
+#include "swp.h"
 
 #define SERVER_PORT 8000
 #define CLIENT_PORT 8500
@@ -15,17 +15,15 @@
 int main(int argc, char *argv[]) {
 
 	//Sanity check code
-	if(argc<2){
-		printf("usage: %s <server>\n",argv[0]);
+	if(argc<3){
+		printf("usage: %s <server> <window_size>\n",argv[0]);
 		exit(0);
 	}
 
 	char command[MAX_COMMAND_SIZE] = {"done\0"};
-	//char response[MAX_RESPONSE_SIZE]; 
-	struct Message response;
 
 
-	int sd, rc, remoteServLen, n;
+	int sd, rc,  n;
 	struct sockaddr_in cliAddr, remoteServAddr;
 	struct hostent *h;
 
@@ -59,7 +57,7 @@ int main(int argc, char *argv[]) {
 	  exit(1);
 	}
 
-
+	struct SWP* swp = get_new_SWP(atoi(argv[2]), (struct sockaddr*)&remoteServAddr, sizeof(remoteServAddr), sd);
 	while(strcmp(command,"open\n")!=0){
 		//Till the client enters "open" we don't proceed.
 		fgets(command, MAX_COMMAND_SIZE, stdin); //We don't use scanf as we have to
@@ -75,8 +73,7 @@ int main(int argc, char *argv[]) {
 		//Keep asking for commands until done
 		
 		//Send command
-		rc = sendto(sd, command, strlen(command)+1, 0, (struct sockaddr *) &remoteServAddr, sizeof(remoteServAddr));
-		if(rc < 0){
+		if(send_command(swp, command) < 0){
 			printf("Unable to send data\n");
 			close(sd);
 			exit(1);
@@ -84,11 +81,8 @@ int main(int argc, char *argv[]) {
 
 
 		//Receive response
-		int count = 0;
-		n = recvfrom_with_timeout(sd, &response, (struct sockaddr *) &remoteServAddr, &remoteServLen);
 	
 		if(command[0] == 'g' && command[1] == 'e' && command[2] == 't'){
-			if(n > 0){  
 			    int i;
 			    int k = strlen(command);
 			    for(i = 0; i <= k - 4; i++){
@@ -96,29 +90,18 @@ int main(int argc, char *argv[]) {
 			    }
 			    command[k - 4] = '\0';
 			    FILE *fp;
-			    fp = fopen(command, "w");
+			    fp = fopen(command, "wb");
 			    if(fp == NULL){
 				    printf("Unable to store file %s\n", command);				   
 			    } else{
-				    while(n > 0){
-					    fputs(response.content,fp);
-					    n = recvfrom_with_timeout(sd, &response, (struct sockaddr *) &remoteServAddr, &remoteServLen);
-				    }
-				    fclose(fp);
-			    }
-			    fputs("Received file.\n",stdout);
 
-			}			
-			else{
-				printf("File not found\n");
-			}
+				receive_message(swp, fp);
+				fclose(fp);
+			    }
+
 		}
 		else {  
-			while(n > 0){
-			        fputs(response.content, stdout);
-				n = recvfrom_with_timeout(sd, &response, (struct sockaddr *) &remoteServAddr, &remoteServLen);
-				count++;
-			}
+			receive_message(swp, stdout);
 		}
 		fputs("=============================================\n", stdout);
 		fgets(command, MAX_COMMAND_SIZE, stdin);
