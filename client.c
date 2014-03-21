@@ -9,7 +9,7 @@
 #include <errno.h>
 #include "swp.h"
 
-#define SERVER_PORT 8000
+#define MIM_PORT 8100
 #define CLIENT_PORT 8500
 
 int main(int argc, char *argv[]) {
@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
 
 	remoteServAddr.sin_family = h->h_addrtype;
 	memcpy((char *) &remoteServAddr.sin_addr.s_addr, h->h_addr_list[0], h->h_length);
-	remoteServAddr.sin_port = htons(SERVER_PORT);
+	remoteServAddr.sin_port = htons(MIM_PORT);
 
 	  /* socket creation */
 	sd = socket(AF_INET,SOCK_DGRAM,0);
@@ -95,14 +95,24 @@ int main(int argc, char *argv[]) {
 				    printf("Unable to store file %s\n", command);				   
 			    } else{
 
-				receive_message(swp, fp);
+				if(receive_message(swp, fp) == -1){
+					printf("Server unreachable. Exit\n");
+					close(sd);
+					exit(1);
+				}
 				fclose(fp);
 			    }
 
 		}
-		else {  
-			receive_message(swp, stdout);
+		else if(command[0] != 'c' || command[1] != 'd'){  
+			if(receive_message(swp, stdout) == -1){
+				printf("Server unreachable. Exit\n");
+				close(sd);
+				exit(1);
+			}
+
 		}
+
 		fputs("=============================================\n >> ", stdout);
 		fgets(command, MAX_COMMAND_SIZE, stdin);
 		fputs("---------------------------------------------\n", stdout);

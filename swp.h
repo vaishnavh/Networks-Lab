@@ -7,18 +7,15 @@
 #define CONTENT_SIZE 16000
 #define MAX_COMMAND_SIZE 32000
 #define DISCONNECT_TIME 1 // 1 second
-#define TIMEOUT_USEC 550000
+#define TIMEOUT_USEC 1000000
 #define TIMEOUT_SEC 0
+#define _DEBUG 2
 #define MAX_SEQ_NO 4294967295
-#define _DEBUG 1
 #define MOD(x) (x)
 
-//TODO: check with greater window size
-//TODO: fix timeouts
-//TODO: get wrapup?
 //TODO: Disconnection code
 struct Message{
-	unsigned int seq_no; // sequence number
+	unsigned int  seq_no; // sequence number
 	int ack; // set as -1 if it is not an ack. otherwise set.
 	int size;
 	char content[CONTENT_SIZE];

@@ -11,9 +11,9 @@ void print_message(struct Message* message){
 	printf("****************************\n");
 	if(message->ack == -1){
 		printf("Message Sequence Number: %u\n",message->seq_no);
-		printf("---------------------------\n");
+		printf("----------------------------\n");
 		fputs(message->content, stdout);
-		printf("---------------------------\n");
+		printf("----------------------------\n");
 		printf("\nMessage size = %d\n",message->size);
 	}else{
 		printf("Acknowledgement Number: %u\n",message->ack);
@@ -24,7 +24,11 @@ void print_message(struct Message* message){
 
 int receive_with_timeout(struct SWP* swp, struct Message* buf){
 
-	return recvfrom(swp->sockfd, buf, sizeof(struct Message), 0, swp->addr, (socklen_t*) &swp->addrlen);
+	int n =  recvfrom(swp->sockfd, buf, sizeof(struct Message), 0, swp->addr, (socklen_t*) &swp->addrlen);
+#if _DEBUG > 1
+	printf("receive_with_timeout: %d\n",n);
+#endif
+	return n;
 }
 
 
@@ -59,7 +63,7 @@ int add_message_to_sender(struct SenderSW* sender, char* buf, int ack, int size)
 
 struct SWP * get_new_SWP(unsigned int window_size, struct sockaddr* addr, int addrlen, int sockfd){
 	struct SenderSW* sender = (struct SenderSW*)malloc(sizeof(struct SenderSW*));
-	sender->LAR = MAX_SEQ_NO - 20;//-1;
+	sender->LAR = -1;
 	sender->LFS = sender->LAR;
 	sender->SWS = window_size;
 	sender->window = (struct Message**)malloc(window_size * sizeof(struct Message*));
@@ -79,7 +83,7 @@ struct SWP * get_new_SWP(unsigned int window_size, struct sockaddr* addr, int ad
 	swp->sender = sender;
 
 	struct timeval tv;
-	tv.tv_usec = TIMEOUT_USEC;
+	tv.tv_usec = TIMEOUT_USEC/TRIAL_NUM;
 	tv.tv_sec = TIMEOUT_SEC;
 	if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO,&tv,sizeof(tv)) < 0) {
 		perror("Error");
@@ -136,7 +140,9 @@ int send_and_receive(struct SWP* swp){
 	// Returns 1 : if ack is successfully received
 	// Returns -1: if no ack is received
 
-	//Sending messages phase
+	// Tries sending once and receiving once!
+	// Time interval  of 0.2 seconds
+	// Sending messages phase
 	if(is_sender_empty(swp)){
 		return 0; // The window is empty. Nothing to send	
 	}
@@ -151,26 +157,31 @@ int send_and_receive(struct SWP* swp){
 
 	//Receiving phase
 	// Window was not empty. Look for receipt for a time-gap of zero seconds.
-	int cumul_ack = -1;				
+	unsigned int cumul_ack;
+	int ack_recvd = -1;	
 	struct Message* buf = (struct Message*) malloc(sizeof(struct Message));
 #ifdef _DEBUG
 	printf("send_and_receive: trying to receive acknowledgements\n");
 #endif
 	int n = receive_with_timeout(swp, buf);
-	int count = 1;
-	while(n < 0 && count > 0){
+	int count = 0;
+	while(n <= 0 && count > 0){
 		n = receive_with_timeout(swp, buf);
 		count-- ;
 	}
-	while(n >= 0){
+	while(n > 0){
 		if(n > 0){
 			struct Message* message = (struct Message*) malloc(sizeof(struct Message));
 			memcpy(message, buf, sizeof(struct Message));
 			//Check for ack outside window!!
 			if(is_valid_ack(swp->sender, message->ack)){
-				if(cumul_ack == -1){
+#ifdef _DEBUG
+				printf("send_and_receive: received valid acknowledgement: %u\n",message->ack);
+#endif
+				if(ack_recvd == -1){
 					// First ack in the lot
 					cumul_ack = message->ack;
+					ack_recvd = 1;
 				}else if(cumul_ack - message->ack > swp->sender->SWS || message->ack - cumul_ack > swp->sender->SWS){
 				// This means that the sliding window has a wrap up of sequence numbers
 					if(cumul_ack > message->ack){
@@ -181,15 +192,21 @@ int send_and_receive(struct SWP* swp){
 					cumul_ack = message->ack;
 				}
 			}
+#ifdef _DEBUG
+			else {
+				//Invalid ack
+				printf("send_and_receive: received invalid acknowledgement with seq no: %u\n",message->seq_no);
+			}
+#endif
+	
 		}
 		n = receive_with_timeout(swp, buf);
 	}
-
+	if(ack_recvd != -1){
 #ifdef _DEBUG
-	printf("send_and_receive: cumulutive ack receive: %u\n",cumul_ack);
+		printf("send_and_receive: cumulative ack received: %u\n",cumul_ack);
 #endif
-	if(cumul_ack != -1){
-		//Remove all frames in the beginning	
+	//Remove all frames in the beginning	
 		int last_removed;
 		for(last_removed = 0; last_removed < swp->sender->SWS; last_removed ++){
 			if(swp->sender->window[last_removed]->seq_no == cumul_ack){
@@ -212,6 +229,12 @@ int send_and_receive(struct SWP* swp){
 #endif
 		return 1;
 	}
+
+#ifdef _DEBUG
+	printf("No acknowledgement received \n");
+#endif
+	
+	
 	
 	//Nothing received
 	return -1;
@@ -222,19 +245,40 @@ int send_messages(struct SWP* swp, FILE* fp){
 	int read_size = 1;
 	char buf[CONTENT_SIZE];
 	int ret_val;
+	int no_response = 0;
 	while(1){
 		//Populating window stage
 		while(is_sender_window_moved(swp) && (read_size = fread(buf, sizeof(char), CONTENT_SIZE, fp)) > 0){
 			add_message_to_sender(swp->sender, buf, -1, read_size);//This is not an ack
 		}
 
-		int count = 2;
+		/*
+		int count = 0;
 		while((ret_val = send_and_receive(swp)) != 1 && count > 0){
 			// Nothing to send and receive
 			count --;
 		}
 		if(count == 0){
-			return ret_val;
+			if(ret_val == 0){
+				//Nothing was sent anyway
+				return 1;
+			}else {
+				return -1;
+			}
+		}
+		*/
+
+		if((ret_val = send_and_receive(swp)) == 0){
+			//Nothing was sent anyway
+			return 1;
+		}
+
+		if(ret_val == -1){
+			//No acknowledgement for more than 1 second
+			no_response ++;
+			if(no_response == TRIAL_NUM){
+				return -1;
+			}
 		}
 
 	}
@@ -244,8 +288,9 @@ int send_messages(struct SWP* swp, FILE* fp){
 int send_command(struct SWP* swp, char* command){
 	char buf[CONTENT_SIZE];
 	int i = 0;
-	int ret_val = 1;
-	while(ret_val == 1){
+	int ret_val = 5;
+	//One while loop is expected to be 0.2 seconds
+	while(ret_val != 0 && no_response < TRIAL_NUM){
 		//Populating window stage
 		while(is_sender_window_moved(swp) && (i <= strlen(command))){
 			if(i + CONTENT_SIZE > strlen(command)){
@@ -260,13 +305,15 @@ int send_command(struct SWP* swp, char* command){
 			}
 		}
 
-
 		ret_val = send_and_receive(swp);
+		if(ret_val == -1){
+			no_response ++;
+		}
 
 	}
 
 #ifdef _DEBUG
-	if(ret_val == -1){
+	if(no_response == TRIAL_NUM){
 		fputs("send_command: acknowledgement not received.\n",stdout);
 	}else if(ret_val == 0){
 		fputs("send_command: Everything sent. \n",stdout);
@@ -288,11 +335,13 @@ int is_valid_frame(struct ReceiverSW* receiver, int seq_no){
 }
 
 int receive(struct SWP* swp){
+	// Tries to receive a non-ack message into the receiver side of the swp
+	// Time interval of 0.5 seconds
 	struct ReceiverSW* receiver = swp->receiver;
 	struct Message* buf = (struct Message*)malloc(sizeof(struct Message));
 	int n = receive_with_timeout(swp, buf);
-	if(n >= 0){
-		while(n >= 0){
+	if(n > 0){
+		while(n > 0){
 			if(n > 0){
 				struct Message* message = (struct Message*)malloc(sizeof(struct Message));
 				memcpy(message, buf, sizeof(struct Message));
@@ -316,7 +365,7 @@ int receive(struct SWP* swp){
 					}
 
 #ifdef _DEBUG
-					printf("receive: adding to message at window index  %d\n", index);
+					printf("receive: adding message %u at window index  %d\n", message->seq_no, index);
 #endif
 
 					receiver->window[index] = message;					
@@ -337,10 +386,11 @@ int receive_command(struct SWP* swp, char command[MAX_COMMAND_SIZE]){
 	struct ReceiverSW *receiver = swp->receiver;
 	int com_ind = 0;
 	int recvd = -1;
+	int recv_ret;
 	while(1){
 		
 		// We try to keep receiving
-		int recv_ret;
+		// Will return if two consecutive receive tries didn't work.
 		if((recv_ret = receive(swp)) == -1){
 			return recvd;
 		}
@@ -365,7 +415,7 @@ int receive_command(struct SWP* swp, char command[MAX_COMMAND_SIZE]){
 		//Send ack for packet at pos-1
 		struct Message* ack_message = (struct Message*) malloc(sizeof(struct Message));
 #if _DEBUG 
-		printf("receive_command: acknowledging till %u", receiver->LFR);
+		printf("receive_command: acknowledging till %u\n", receiver->LFR);
 #endif
 		ack_message->ack = receiver->LFR;
 		deliver_message(swp, ack_message);	
@@ -389,21 +439,26 @@ int receive_command(struct SWP* swp, char command[MAX_COMMAND_SIZE]){
 }
 
 int receive_message(struct SWP* swp, FILE *fp){
-	// This SWP side has sent a command. It will have to receives a message
+	// This SWP side has sent a command. It will have to receive a message
 	// or the output and write it to fp and send acks
 	struct ReceiverSW *receiver = swp->receiver;
+	int recvd = -1;
+	int no_response = 0, recv_ret;
 	while(1){
 		
 		// We have received for this round
-		int count  = 2;
-		while(count > 0 && receive(swp) == -1){
+		//int count  = 1;
+		while((recv_ret = receive(swp)) == -1){
 			//No response from the other side
-			count --;
+			// for 1 s
+			no_response ++;
+			if(no_response == TRIAL_NUM)
+				return recvd;
+			//count --;
 		}
 
-		if(count == 0){
-			return -1;
-		}
+		recvd = 1;
+
 		// Now send acks and write things down
 		int pos;
 		for(pos = 0; pos < receiver->RWS && receiver->window[pos] != NULL; pos ++){
@@ -447,5 +502,6 @@ int receive_message(struct SWP* swp, FILE *fp){
 
 	}
 
-	return 0;
+	//Nothing was received at all?
+	return 1;
 }

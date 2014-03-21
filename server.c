@@ -9,7 +9,7 @@
 #include "swp.h"
 
 #define SERVER_PORT 8000
-#define CLIENT_PORT 8500
+#define MIM_PORT 8200
 
 
 int execute_command(struct SWP* swp, char* command, int sockfd, struct sockaddr* dest_addr, int addrlen){
@@ -17,9 +17,14 @@ int execute_command(struct SWP* swp, char* command, int sockfd, struct sockaddr*
 	fp = popen(command,"r");
 	if(fp == NULL){
 		printf("Something wrong with \"%s\"\n",command);
+		close(sockfd);
 		exit(1);
 	}
-	send_messages(swp, fp);
+	if(send_messages(swp, fp) == -1){
+		printf("Unable to reach client\n");
+		close(sockfd);	
+		exit(1);
+	}
 	pclose(fp);
 	return 0;
 }
@@ -87,7 +92,7 @@ int main(int argc, char *argv[]) {
 				    exit(1);
 			    }else{
 				    printf("Moved to home directory.\n");
-				    send_command(swp, "HOME\n");
+				    end_command(swp, "HOME\n");
 				    started = 1;
 			    }
 		    }else{
