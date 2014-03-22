@@ -8,19 +8,21 @@
 #define MAX_COMMAND_SIZE 32000
 #define DISCONNECT_TIME 1 // 1 second
 #define TIMEOUT_USEC 1000000
+#define TRIAL_NUM 10
 #define TIMEOUT_SEC 0
-#define _DEBUG 2
+#define _DEBUG -1
+//#define _WRITE 1
 #define MAX_SEQ_NO 4294967295
 #define MOD(x) (x)
 
 //TODO: Disconnection code
 struct Message{
 	unsigned int  seq_no; // sequence number
-	int ack; // set as -1 if it is not an ack. otherwise set.
+	unsigned int ack; // set as -1 if it is not an ack. otherwise set.
+	int is_ack;
 	int size;
 	char content[CONTENT_SIZE];
 };
-
 
 
 struct SenderSW{

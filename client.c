@@ -95,10 +95,13 @@ int main(int argc, char *argv[]) {
 				    printf("Unable to store file %s\n", command);				   
 			    } else{
 
-				if(receive_message(swp, fp) == -1){
+				if((rc = receive_message(swp, fp)) == -1){
 					printf("Server unreachable. Exit\n");
 					close(sd);
+					fclose(fp);
 					exit(1);
+				}else if(rc == 0){
+					printf("WARNING: incomplete response received. \n");
 				}
 				fclose(fp);
 			    }

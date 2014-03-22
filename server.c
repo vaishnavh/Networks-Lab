@@ -78,13 +78,14 @@ int main(int argc, char *argv[]) {
 	    
 	    	
 	    /* receive message */
-	    while(receive_command(swp, msg) == -1);
-	    fputs(msg, stdout);
+	    while((rc = receive_command(swp, msg)) != 1);
 	    if(msg[strlen(msg)-1]=='\n'){
 		    msg[strlen(msg)-1]='\0';
 	    }
-
 	    printf("Command received: %s\n",msg);
+
+	
+
 	    if(!started){
 		     if(strcmp(msg,"open") == 0){
 			    if(chdir("/")==-1){
@@ -92,7 +93,7 @@ int main(int argc, char *argv[]) {
 				    exit(1);
 			    }else{
 				    printf("Moved to home directory.\n");
-				    end_command(swp, "HOME\n");
+				    send_command(swp, "HOME\n");
 				    started = 1;
 			    }
 		    }else{

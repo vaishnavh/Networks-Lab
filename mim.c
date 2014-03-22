@@ -98,13 +98,13 @@ int main(int argc, char *argv[]) {
 	int n;
 	while(1){
 		// Receive message from client side
-	    	n = recvfrom(sd_serv, message, MAX_BLOCK_SIZE, MSG_DONTWAIT, 
+	    	n = recvfrom(sd_serv, message, sizeof(struct Message), MSG_DONTWAIT, 
 			 (struct sockaddr *) &cliAddr,(socklen_t*) &cliLen);
 		
 		// Send message to server
 		if(n > 0){
 			sent = 0;
-			if(message->ack == -1)
+			if(message->is_ack == -1)
 				printf("Received message %u from client. ",message->seq_no);
 			else printf("Receive acknowledgement %u from client. ",message->ack);
 
@@ -122,13 +122,13 @@ int main(int argc, char *argv[]) {
 		}
 
 		// Get message from server
-	    	n = recvfrom(sd_cli, message, MAX_BLOCK_SIZE, MSG_DONTWAIT, 
+	    	n = recvfrom(sd_cli, message, sizeof(struct Message), MSG_DONTWAIT, 
 			 (struct sockaddr *) &remoteServAddr,(socklen_t*) &remoteServLen);
 
 		// Send message to client
 		if(n > 0){
 			sent = 0;
-			if(message->ack == -1)
+			if(message->is_ack == -1)
 				printf("Received message %u from server. ",message->seq_no);
 			else printf("Received acknowledgement %u from server. ",message->ack);
 
