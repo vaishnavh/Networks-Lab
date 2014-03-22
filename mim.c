@@ -18,7 +18,7 @@
 int make_choice(double threshold){
 	//With a probability = threshold returns 1
 	double sample = rand()/(RAND_MAX + 1.0);
-	return (sample > threshold);
+	return (sample >= threshold);
 }
 
 int main(int argc, char *argv[]) {

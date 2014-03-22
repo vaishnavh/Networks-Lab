@@ -179,7 +179,7 @@ int send_and_receive(struct SWP* swp){
 #endif
 	int n = receive_with_timeout(swp, buf);
 	int response = 0;
-	int count = 0;
+//	int count = 0;
 	/*while(n <= 0 && count > 0){
 		n = receive_with_timeout(swp, buf);
 		count-- ;
@@ -211,7 +211,7 @@ int send_and_receive(struct SWP* swp){
 #ifdef _DEBUG
 			else {
 				//Invalid ack
-				printf("send_and_receive: received invalid acknowledgement with seq no: %u\n",message->seq_no);
+				printf("send_and_receive: received invalid acknowledgement with seq no: %u, ack_no: %u, is_ack: %d\n",message->seq_no, message->ack, message->is_ack);
 			}
 #endif
 	
@@ -284,7 +284,6 @@ int send_messages(struct SWP* swp, FILE* fp){
 			while(is_sender_window_moved(swp) && (read_size = fread(buf, sizeof(char), CONTENT_SIZE, fp)) >= 0){
 				if(read_size > 0){
 					add_message_to_sender(swp->sender, buf, read_size);//This is not an ack
-					print_hex(buf, read_size);
 				}
 				else{
 					add_message_to_sender(swp->sender, NULL, 0);
@@ -531,6 +530,9 @@ int receive_command(struct SWP* swp, char command[MAX_COMMAND_SIZE]){
 		}
 
 		if(command_over == 1){
+#ifdef _DEBUG
+			printf("receive_command: received whole command.\n");
+#endif
 			return 1;
 		}	
 	}
@@ -542,8 +544,10 @@ int receive_message(struct SWP* swp, FILE *fp){
 	// This SWP side has sent a command. It will have to receive a message
 	// or the output and write it to fp and send acks
 	// Returns 1 if complete message was read
-	// Returns -1 if server stopped responding and no message was received
+	// Returns -1 if the sender stopped responding and no message was received
 	// Returns 0 if incomplete message was read
+	// THIS IS DIFFERENT FROM receive_command. Why?
+	// Receive command doesn't timeout 
 	struct ReceiverSW *receiver = swp->receiver;
 	int recvd = -1;
 	int no_response = 0,  recv_ret;
@@ -596,6 +600,9 @@ int receive_message(struct SWP* swp, FILE *fp){
 		int ind;
 #ifdef _DEBUG
 		printf("receive_message: output stream begins\n");
+		if(pos == 0){
+			printf("receive_message: nothing to output\n");
+		}
 #endif
 		for(ind = 0; ind < receiver->RWS; ind ++){
 			if(ind < pos && !message_over){
@@ -624,12 +631,35 @@ int receive_message(struct SWP* swp, FILE *fp){
 		printf("receive_message: output stream ends\n");
 #endif
 		if(message_over){
-			//Message is over
-			printf("Messaging is over.\n");
 			return 1;
 		}
 
 	}
 
+	//never comes here
+	return 0;
+}
+
+int is_exist_file(struct SWP* swp, char* file_name){
+	// Returns 0 if file doesn't exist
+	// Return value is not really useful
+	FILE* fp = fopen(file_name, "r");
+	if(fp == NULL){
+		send_command(swp, "Unable to open file.\n");
+		return 0;
+	}
+	else{
+		fclose(fp);
+		send_command(swp,"1");
+	}
 	return 1;
+}
+
+int get_file_confirmation(struct SWP* swp){
+	char exist[CONTENT_SIZE];
+	receive_command(swp, exist);
+	if(exist[0] == '1'){
+		return 1;
+	}
+	return 0;
 }

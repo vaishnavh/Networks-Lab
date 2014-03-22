@@ -7,10 +7,26 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
+#include <sys/time.h>
 #include "swp.h"
 
 #define MIM_PORT 8100
 #define CLIENT_PORT 8500
+
+
+static struct timeval tm1;
+
+static inline void start(){
+    gettimeofday(&tm1, NULL);
+}
+
+static inline void stop(){
+    struct timeval tm2;
+    gettimeofday(&tm2, NULL);
+
+    unsigned long long t = 1000000 * (unsigned long long)(tm2.tv_sec - tm1.tv_sec) + (tm2.tv_usec - tm1.tv_usec);
+    printf("File transfer took %llu us\n", t);
+}
 
 int main(int argc, char *argv[]) {
 
@@ -89,25 +105,34 @@ int main(int argc, char *argv[]) {
 		       	    char new_name[k - 3];
 			    memcpy(new_name, command + 4, k - 4);
 			    new_name[k - 5] = '\0';
-			    FILE *fp;
-			    fp = fopen(new_name, "wb");
-			    if(fp == NULL){
-				    printf("Unable to store file %s\n", command);				   
-			    } else{
-
-				if((rc = receive_message(swp, fp)) == -1){
-					printf("Server unreachable. Exit\n");
-					close(sd);
+			    rc = get_file_confirmation(swp);
+			    if(rc == 1){
+				FILE *fp;
+				fp = fopen(new_name, "wb");
+				if(fp == NULL){
+					printf("Unable to store file %s\n", command);
+				}else{	
+					start();
+					rc = receive_message(swp, fp);
+					stop();
+					if(rc == -1){
+						printf("Server unreachable. Exit\n");
+						close(sd);
+						fclose(fp);
+						exit(1);
+					}else if(rc == 0){
+						printf("WARNING: incomplete response received. \n");
+					}else{
+						printf("Successfully received file.\n");
+					}
 					fclose(fp);
-					exit(1);
-				}else if(rc == 0){
-					printf("WARNING: incomplete response received. \n");
 				}
-				fclose(fp);
+			    }else if(rc == 0){
+			    	printf("File does not exist.\n");
 			    }
 
 		}
-		else if(command[0] != 'c' || command[1] != 'd'){  
+		else {  
 			if(receive_message(swp, stdout) == -1){
 				printf("Server unreachable. Exit\n");
 				close(sd);

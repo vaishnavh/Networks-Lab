@@ -20,6 +20,9 @@ int execute_command(struct SWP* swp, char* command, int sockfd, struct sockaddr*
 		close(sockfd);
 		exit(1);
 	}
+	if(command[0]=='c' && command[1] == 'd'){
+		return 0;
+	}
 	if(send_messages(swp, fp) == -1){
 		printf("Unable to reach client\n");
 		close(sockfd);	
@@ -88,7 +91,8 @@ int main(int argc, char *argv[]) {
 
 	    if(!started){
 		     if(strcmp(msg,"open") == 0){
-			    if(chdir("/")==-1){
+			     //Remember to change this later
+			    if(chdir("/home/vaish")==-1){
 				    printf("Cannot move to home directory.\n");
 				    exit(1);
 			    }else{
@@ -108,9 +112,11 @@ int main(int argc, char *argv[]) {
 		    if(msg[2] == '\0'){
 			    //A simple cd.
 			    if(chdir("/")==-1){
-				    printf("Cannot move to home directory.\n");
+				    printf("Sending message: cannot move to home directory.\n");
+				    send_command(swp, "Cannot move to home directory.\n");
 			    }else{
-				    printf("Moved to home directory\n");
+				    printf("Sending message: Moved to home directory.\n");
+				    send_command(swp,"Moved to home directory\n");
 			    }
 		    }
 		    else{
@@ -121,9 +127,11 @@ int main(int argc, char *argv[]) {
 			    }
 			    msg[k - 3] = '\0';
 			    if(chdir(msg)==-1){
-				printf("Cannot move to specified location.\n");
+				    printf("Sending message: cannot move to specified directory.\n");
+				send_command(swp, "Cannot move to specified location.\n");
 			    }else{
-			        printf("Moved to \"%s\"\n",msg);
+				    printf("Sending message: successfully moved to specified location.\n");
+			        send_command(swp, "Successfully moved to specified location.\n");
 			    }
 		    }
 	    }else if(msg[0] == 'p' && msg[1] == 'w' && msg[2] == 'd'){
@@ -136,15 +144,18 @@ int main(int argc, char *argv[]) {
 		    }
 		    msg[k - 4] = '\0';
 		    FILE *fp;
-		    printf("Sending %s\n",msg);
+		    is_exist_file(swp, msg);
 		    fp = fopen(msg, "rb");
 		    if(fp == NULL){
-			    printf("Unable to open file %s\n", msg);				   
+			    printf("Unable to open file.\n");				   
 		    } else{
+			    printf("Beginning file transfer.\n");	
 			    send_messages(swp, fp);
 			    fclose(fp);
 		    }
-           }
+           }else{
+	   	send_command(swp, "Invalid command.\n");
+	   }
 		   
     }/* end of server infinite loop */
 
