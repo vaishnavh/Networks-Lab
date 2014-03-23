@@ -4,10 +4,10 @@
 !_TAG_PROGRAM_NAME	Exuberant Ctags	//
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.9~svn20110310	//
-CLIENT_PORT	client.c	13;"	d	file:
+CLIENT_PORT	client.c	14;"	d	file:
 CLIENT_PORT	mim.c	14;"	d	file:
 MIM_CLIENT_PORT	mim.c	16;"	d	file:
-MIM_PORT	client.c	12;"	d	file:
+MIM_PORT	client.c	13;"	d	file:
 MIM_PORT	server.c	12;"	d	file:
 MIM_SERVER_PORT	mim.c	15;"	d	file:
 SERVER_PORT	mim.c	13;"	d	file:
@@ -15,7 +15,10 @@ SERVER_PORT	server.c	11;"	d	file:
 add_message_to_sender	swp.c	/^int add_message_to_sender(struct SenderSW* sender, char* buf, int size){$/;"	f
 deliver_message	swp.c	/^int deliver_message(struct SWP* swp, struct Message* message){$/;"	f
 execute_command	server.c	/^int execute_command(struct SWP* swp, char* command, int sockfd, struct sockaddr* dest_addr, int addrlen){$/;"	f
+free_message	swp.c	/^void free_message(struct Message* m){$/;"	f
+get_file_confirmation	swp.c	/^int get_file_confirmation(struct SWP* swp){$/;"	f
 get_new_SWP	swp.c	/^struct SWP * get_new_SWP(unsigned int window_size, struct sockaddr* addr, int addrlen, int sockfd){$/;"	f
+is_exist_file	swp.c	/^int is_exist_file(struct SWP* swp, char* file_name){$/;"	f
 is_sender_empty	swp.c	/^int is_sender_empty(struct SWP* swp){$/;"	f
 is_sender_window_moved	swp.c	/^int is_sender_window_moved(struct SWP* swp){$/;"	f
 is_valid_ack	swp.c	/^int is_valid_ack(struct SenderSW* sender, unsigned int ack_no){$/;"	f
@@ -33,3 +36,6 @@ receive_with_timeout	swp.c	/^int receive_with_timeout(struct SWP* swp, struct Me
 send_and_receive	swp.c	/^int send_and_receive(struct SWP* swp){$/;"	f
 send_command	swp.c	/^int send_command(struct SWP* swp, char* command){$/;"	f
 send_messages	swp.c	/^int send_messages(struct SWP* swp, FILE* fp){$/;"	f
+start	client.c	/^static inline void start(){$/;"	f	file:
+stop	client.c	/^static inline void stop(){$/;"	f	file:
+tm1	client.c	/^static struct timeval tm1;$/;"	v	typeref:struct:timeval	file:

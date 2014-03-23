@@ -1,0 +1,5 @@
+./server: waiting for data on port UDP 8000
+receiver: (LFR = 4294967295, LAF = 3)
+receive_command: acknowledging till 4294967295
+deliver_message: sending acknowledgement 4294967295
+Error sending  data

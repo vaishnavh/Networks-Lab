@@ -12,8 +12,11 @@ server: swp.o my_server.o
 mim: my_mim.o swp.o
 	$(CC) $(CFLAGS) -o mim my_mim.o swp.o
 
-my_client.o: client.c swp.o
-	$(CC) $(CFLAGS) -o my_client.o -c client.c
+#my_client.o: client.c swp.o
+#	$(CC) $(CFLAGS) -o my_client.o -c client.c
+
+my_client.o: run.c swp.o
+	$(CC) $(CFLAGS) -o my_client.o -c run.c
 
 my_server.o: server.c swp.o
 	$(CC) $(CFLAGS) -c server.c -o my_server.o

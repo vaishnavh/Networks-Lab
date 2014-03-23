@@ -16,7 +16,7 @@ int execute_command(struct SWP* swp, char* command, int sockfd, struct sockaddr*
 	FILE *fp;
 	fp = popen(command,"r");
 	if(fp == NULL){
-		printf("Something wrong with \"%s\"\n",command);
+		//printf("Something wrong with \"%s\"\n",command);
 		close(sockfd);
 		exit(1);
 	}
@@ -24,7 +24,7 @@ int execute_command(struct SWP* swp, char* command, int sockfd, struct sockaddr*
 		return 0;
 	}
 	if(send_messages(swp, fp) == -1){
-		printf("Unable to reach client\n");
+		//printf("Unable to reach client\n");
 		close(sockfd);	
 		exit(1);
 	}
@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
 
   //Sanity check code
   if(argc<2){
-	printf("usage: %s <window_size>\n",argv[0]);
+	//printf("usage: %s <window_size>\n",argv[0]);
 	exit(0);
   }
 
@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
   /* socket creation */
   sd=socket(AF_INET, SOCK_DGRAM, 0);
   if(sd<0) {
-    printf("%s: cannot open socket \n",argv[0]);
+    //printf("%s: cannot open socket \n",argv[0]);
     exit(1);
   }
 
@@ -61,13 +61,11 @@ int main(int argc, char *argv[]) {
   servAddr.sin_port = htons(SERVER_PORT);
   rc = bind (sd, (struct sockaddr *) &servAddr,sizeof(servAddr));
   if(rc<0) {
-    printf("%s: cannot bind port number %d \n", 
-	   argv[0], SERVER_PORT);
+    //printf("%s: cannot bind port number %d \n", argv[0], SERVER_PORT);
     exit(1);
   }
 
-  printf("%s: waiting for data on port UDP %u\n", 
-	   argv[0],SERVER_PORT);
+  //printf("%s: waiting for data on port UDP %u\n", argv[0],SERVER_PORT);
   /*----------------------------------------------------------------*/
   /*----------------------------------------------------------------*/
   /*----------------------------------------------------------------*/
@@ -81,11 +79,11 @@ int main(int argc, char *argv[]) {
 	    
 	    	
 	    /* receive message */
-	    while((rc = receive_command(swp, msg)) != 1);
+	    while((rc = receive_command(swp, msg, 1)) != 1);
 	    if(msg[strlen(msg)-1]=='\n'){
 		    msg[strlen(msg)-1]='\0';
 	    }
-	    printf("Command received: %s\n",msg);
+	    //printf("Command received: %s\n",msg);
 
 	
 
@@ -93,15 +91,15 @@ int main(int argc, char *argv[]) {
 		     if(strcmp(msg,"open") == 0){
 			     //Remember to change this later
 			    if(chdir("/home/vaish")==-1){
-				    printf("Cannot move to home directory.\n");
+				    //printf("Cannot move to home directory.\n");
 				    exit(1);
 			    }else{
-				    printf("Moved to home directory.\n");
+				    //printf("Moved to home directory.\n");
 				    send_command(swp, "HOME\n");
 				    started = 1;
 			    }
 		    }else{
-			printf("Cannot execute \"%s\". Type \"open\" to start connection.\n",msg);
+			//printf("Cannot execute \"%s\". Type \"open\" to start connection.\n",msg);
 		    }
 	    }
 	    
@@ -112,10 +110,10 @@ int main(int argc, char *argv[]) {
 		    if(msg[2] == '\0'){
 			    //A simple cd.
 			    if(chdir("/")==-1){
-				    printf("Sending message: cannot move to home directory.\n");
+				    //printf("Sending message: cannot move to home directory.\n");
 				    send_command(swp, "Cannot move to home directory.\n");
 			    }else{
-				    printf("Sending message: Moved to home directory.\n");
+				    //printf("Sending message: Moved to home directory.\n");
 				    send_command(swp,"Moved to home directory\n");
 			    }
 		    }
@@ -127,10 +125,10 @@ int main(int argc, char *argv[]) {
 			    }
 			    msg[k - 3] = '\0';
 			    if(chdir(msg)==-1){
-				    printf("Sending message: cannot move to specified directory.\n");
+				    //printf("Sending message: cannot move to specified directory.\n");
 				send_command(swp, "Cannot move to specified location.\n");
 			    }else{
-				    printf("Sending message: successfully moved to specified location.\n");
+				    //printf("Sending message: successfully moved to specified location.\n");
 			        send_command(swp, "Successfully moved to specified location.\n");
 			    }
 		    }
@@ -144,12 +142,12 @@ int main(int argc, char *argv[]) {
 		    }
 		    msg[k - 4] = '\0';
 		    FILE *fp;
-		    is_exist_file(swp, msg);
+		    //is_exist_file(swp, msg);
 		    fp = fopen(msg, "rb");
 		    if(fp == NULL){
-			    printf("Unable to open file.\n");				   
+			    //printf("Unable to open file.\n");				   
 		    } else{
-			    printf("Beginning file transfer.\n");	
+			    //printf("Beginning file transfer.\n");	
 			    send_messages(swp, fp);
 			    fclose(fp);
 		    }

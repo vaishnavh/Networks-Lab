@@ -10,7 +10,7 @@
 #define TIMEOUT_USEC 1000000
 #define TRIAL_NUM 10
 #define TIMEOUT_SEC 0
-//#define _DEBUG -1
+//#define _DEBUG 2
 //#define _WRITE 1
 #define MAX_SEQ_NO 4294967295
 #define MOD(x) (x)
@@ -55,7 +55,8 @@ struct SWP * get_new_SWP(unsigned int, struct sockaddr*, int, int);
 int send_messages(struct SWP*, FILE*);
 int send_command(struct SWP*, char*);
 int receive_message(struct SWP*, FILE*);
-int receive_command(struct SWP*, char*);
+int receive_command(struct SWP*, char*, int);
 int is_exist_file(struct SWP*, char*);
 int get_file_confirmation(struct SWP*);
+int get_user_command(struct SWP*, char* command);
 #endif

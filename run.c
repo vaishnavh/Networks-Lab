@@ -21,23 +21,19 @@ static inline void start(){
 }
 
 static inline void stop(){
-    struct timeval tm2;
-    gettimeofday(&tm2, NULL);
-
-    unsigned long long t = 1000000 * (unsigned long long)(tm2.tv_sec - tm1.tv_sec) + (tm2.tv_usec - tm1.tv_usec);
-    printf("File transfer took %llu us\n", t);
-}
+    }
 
 int main(int argc, char *argv[]) {
 
+	
 	//Sanity check code
-	if(argc<3){
-		printf("usage: %s <server> <window_size>\n",argv[0]);
+	if(argc<5){
+		printf("usage: %s <server> <window_size> <p> <q>\n",argv[0]);
 		exit(0);
 	}
 
 	char command[MAX_COMMAND_SIZE]	= {"done\0"};
-
+	
 
 	int sd, rc;
 	struct sockaddr_in cliAddr, remoteServAddr;
@@ -58,7 +54,6 @@ int main(int argc, char *argv[]) {
 	  /* socket creation */
 	sd = socket(AF_INET,SOCK_DGRAM,0);
 	if(sd<0) {
-	printf("%s: cannot open socket \n",argv[0]);
 	  exit(1);
 	}
 	  
@@ -69,72 +64,87 @@ int main(int argc, char *argv[]) {
 	
 	rc = bind(sd, (struct sockaddr *) &cliAddr, sizeof(cliAddr));
 	if(rc<0) {
-	  printf("%s: cannot bind port\n", argv[0]);
 	  exit(1);
 	}
 
 	struct SWP* swp = get_new_SWP(atoi(argv[2]), (struct sockaddr*)&remoteServAddr, sizeof(remoteServAddr), sd);
-
-	while(strcmp(command,"open\n")!=0){
-		fputs("\n >> ", stdout);
-		//Till the client enters "open" we don't proceed.
-		fgets(command, MAX_COMMAND_SIZE, stdin); //We don't use scanf as we have to
-		fputs("----------------------------------------\n", stdout);
-		//accept spaces too.
-	}
+	
+	memmove(command, "open\n",10);
 
   /*----------------------------------------------------------------*/
   /*----------------------------------------------------------------*/
   /*----------------------------------------------------------------*/
 
+	FILE* fp1 = fopen("temp.txt","w");
+	int count = 6;
 	//Sends "open" first
-	while(strcmp(command,"done\n")){
+	while(count -- ){
 		//Keep asking for commands until done
 		
 		//Send command
 		if(send_command(swp, command) == -1){
-			printf("Server not responding\n");
 			exit(0);
 		}
 
-
 		//Receive response
-	
 		if(command[0] == 'g' && command[1] == 'e' && command[2] == 't'){
 			    int k = strlen(command);
-		       	    char new_name[k - 3];
+		       	    char new_name[k - 2];
 			    memcpy(new_name, command + 4, k - 4);
-			    new_name[k - 5] = '\0';
+			    new_name[k - 5] = '0' + count;
+			    new_name[k - 4] = '\0';
 			    //rc = get_file_confirmation(swp);
 			    rc = 1;
 			    if(rc == 1){
 				FILE *fp;
 				fp = fopen(new_name, "wb");
 				if(fp == NULL){
-					printf("Unable to store file %s\n", command);
 				}else{	
 					start();
 					rc = receive_message(swp, fp);
-					stop();
-					if(rc == -1){
-						printf("Server unreachable. Exit\n");
+					struct timeval tm2;
+				    gettimeofday(&tm2, NULL);
+
+				    unsigned long long t = 1000000 * (unsigned long long)(tm2.tv_sec - tm1.tv_sec) + (tm2.tv_usec - tm1.tv_usec);
+				    //printf("File transfer took %llu us\n", t)	;
+				    					if(rc == -1){
 						close(sd);
 						fclose(fp);
 						exit(1);
-					}else if(rc == 0){
-						printf("WARNING: incomplete response received. \n");
-					}else{
-						printf("Successfully received file.\n");
 					}
-					fclose(fp);
-				}
-			    }else if(rc == 0){
-			    	printf("File does not exist.\n");
-			    }
 
+					fclose(fp);
+					char exec[11] = {"xxd a1 > c"};
+				    exec[5] = '0'+count;
+				    system(exec);
+				    char pr[26]={"cmp -s c com && echo -n 1"};
+				    pr[strlen(pr)-1] = count + '0';
+				    system(pr);
+				    char write[100];
+				    int plus;
+				    memcpy(write,"echo , ", 6);
+				    memcpy(write + 6, argv[3],strlen(argv[3]));
+					    plus = 6 + strlen(argv[3]);
+				    memcpy(write + plus,", ",2);
+				    plus += 2;
+				    memcpy(write + plus, argv[4],strlen(argv[4]));
+					    plus += strlen(argv[4]);
+				    memcpy(write + plus,", ",2);
+				    plus += 2;
+
+				    char time[20];
+				    snprintf(time, 20, "%llu\n", t);
+			    	    //fputs(time, stdout);
+				    memcpy(write + plus, time, strlen(time)+1);
+
+				    system(write);
+
+				}
+
+			    }
 		}
 		else {  
-			if(receive_message(swp, stdout) == -1){
+			if(receive_message(swp, fp1) == -1){
 				printf("Server unreachable. Exit\n");
 				close(sd);
 				exit(1);
@@ -142,15 +152,13 @@ int main(int argc, char *argv[]) {
 
 		}
 
-		fputs("=============================================\n >> \n", stdout);
-		
-		get_user_command(swp, command);
-		//fgets(command, MAX_COMMAND_SIZE, stdin);
-		fputs("---------------------------------------------\n", stdout);
+
+		memmove(command, "get a\n",10);
+
 	}
 
-		fputs("=============================================\n", stdout);
- 
+
+ 	fclose(fp1);
 	  return 1;
 
 }
