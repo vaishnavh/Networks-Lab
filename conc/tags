@@ -1,0 +1,38 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+CLIENT_PORT	client.c	14;"	d	file:
+CLIENT_PORT	mim.c	13;"	d	file:
+CLIENT_PORT	tcpClient.c	17;"	d	file:
+CONTENT_SIZE	message.h	7;"	d
+MAX_BLOCK_SIZE	message.h	6;"	d
+MAX_COMMAND_SIZE	message.h	4;"	d
+MAX_RESPONSE_SIZE	message.h	5;"	d
+MESSAGE_H_	message.h	2;"	d
+MIM_CLIENT_PORT	mim.c	15;"	d	file:
+MIM_PORT	client.c	13;"	d	file:
+MIM_PORT	server.c	12;"	d	file:
+MIM_PORT	tcpClient.c	18;"	d	file:
+MIM_PORT	tcpServer.c	10;"	d	file:
+MIM_SERVER_PORT	mim.c	14;"	d	file:
+Message	message.h	/^struct Message{$/;"	s
+SERVER_PORT	mim.c	12;"	d	file:
+SERVER_PORT	server.c	11;"	d	file:
+SERVER_PORT	tcpServer.c	9;"	d	file:
+content	message.h	/^	char content[CONTENT_SIZE];$/;"	m	struct:Message
+execute_command	server.c	/^int execute_command(struct SWP* swp, char* command, int sockfd, struct sockaddr* dest_addr, int addrlen){$/;"	f
+main	client.c	/^int main(int argc, char *argv[]) {$/;"	f
+main	mim.c	/^int main(int argc, char *argv[]) {$/;"	f
+main	server.c	/^int main(int argc, char *argv[]) {$/;"	f
+main	tcpClient.c	/^int main (int argc, char *argv[]) {$/;"	f
+main	tcpServer.c	/^int main()$/;"	f
+make_choice	mim.c	/^int make_choice(double threshold){$/;"	f
+receive_message	tcpClient.c	/^int receive_message(int sd, FILE* fp){$/;"	f
+seq_no	message.h	/^	unsigned int seq_no;$/;"	m	struct:Message
+size	message.h	/^	int size;$/;"	m	struct:Message
+start	client.c	/^static inline void start(){$/;"	f	file:
+stop	client.c	/^static inline void stop(){$/;"	f	file:
+tm1	client.c	/^static struct timeval tm1;$/;"	v	typeref:struct:timeval	file:
