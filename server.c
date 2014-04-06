@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
 
   //Sanity check code
   if(argc<2){
-	//printf("usage: %s <window_size>\n",argv[0]);
+	printf("usage: %s <window_size>\n",argv[0]);
 	exit(0);
   }
 
@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
   /* socket creation */
   sd=socket(AF_INET, SOCK_DGRAM, 0);
   if(sd<0) {
-    //printf("%s: cannot open socket \n",argv[0]);
+    printf("%s: cannot open socket \n",argv[0]);
     exit(1);
   }
 
@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
   servAddr.sin_port = htons(SERVER_PORT);
   rc = bind (sd, (struct sockaddr *) &servAddr,sizeof(servAddr));
   if(rc<0) {
-    //printf("%s: cannot bind port number %d \n", argv[0], SERVER_PORT);
+    printf("%s: cannot bind port number %d \n", argv[0], SERVER_PORT);
     exit(1);
   }
 
