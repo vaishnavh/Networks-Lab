@@ -58,7 +58,7 @@ int main (int argc, char *argv[]) {
   /* bind any port number */
   cliAddr.sin_family = AF_INET;
   cliAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-  cliAddr.sin_port = htons(0);
+  cliAddr.sin_port = htons(CLIENT_PORT);
   
   rc = bind(sd, (struct sockaddr *) &cliAddr, sizeof(cliAddr));
   if(rc<0) {
