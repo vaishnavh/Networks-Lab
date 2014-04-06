@@ -10,8 +10,8 @@ do
 	while [ "$(echo $q '<=' 1 | bc -l)" -eq 1 ]
 	do
 		echo "$p $q"
-		./script.sh $ws $p $q >> readings2.txt 
-		./script.sh $ws $p $q >> readings2.txt
+		./script.sh $ws $p $q >> readings3.txt 
+		./script.sh $ws $p $q >> readings3.txt
 		q=`echo $q + 0.1 | bc `
 	done
 	p=`echo $p + 0.1 | bc`

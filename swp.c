@@ -683,7 +683,7 @@ int get_file_confirmation(struct SWP* swp){
 	return 0;
 }
 
-int wait_for_stdin(int usec, int sec)
+int wait_for_stdin(int sec, int usec)
 {
     fd_set set;
     struct timeval timeout = { sec , usec };

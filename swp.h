@@ -10,8 +10,8 @@
 #define TIMEOUT_USEC 1000000
 #define TRIAL_NUM 10
 #define TIMEOUT_SEC 0
-//#define _DEBUG 2
-//#define _WRITE 1
+//define _DEBUG 2
+//define _WRITE 1
 #define MAX_SEQ_NO 4294967295
 #define MOD(x) (x)
 
