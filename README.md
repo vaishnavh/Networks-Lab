@@ -1,4 +1,3 @@
-
 Networks Lab
 ============
 
@@ -15,18 +14,9 @@ Commands
 
 Use the following commands:
 
-```
+```sh
  ./server <window_size>
- ```
- 
- 
-
-```
  ./mim <server> <p> <q>
- ```
- 
- 
-```
  ./client <server> <window_size>
  ```
  
